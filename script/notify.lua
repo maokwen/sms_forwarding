@@ -5,6 +5,9 @@ local wifis = {}
 table.insert(wifis, {name = "", password = ""})
 -- 多个 wifi 继续使用 table.insert 添加，会逐个尝试
 
+-- 推送URL
+local pushURL = ""
+
 --短信接收指令的标记（密码）
 --[[
 目前支持命令（[cmdTag]表示你的tag）
@@ -12,33 +15,6 @@ C[cmdTag]REBOOT：重启
 C[cmdTag]SEND[手机号][空格][短信内容]：主动发短信
 ]]
 local cmdTag = "1234"
-
---这里默认用的是LuatOS社区提供的推送服务，无使用限制
---官网：https://push.luatos.org/ 点击GitHub图标登陆即可
---支持邮件/企业微信/钉钉/飞书/电报/IOS Bark
-
---使用哪个推送服务
---可选：luatos/serverChan/pushover
-local useServer = "luatos"
-
---LuatOS社区提供的推送服务 https://push.luatos.org/ ，用不到可留空
---这里填.send前的字符串就好了
---如：https://push.luatos.org/ABCDEF1234567890ABCD.send/{title}/{data} 填入 ABCDEF1234567890ABCD
-local luatosPush = "ABCDEF1234567890ABCD"
---默认的接口网址，推荐优先使用（由于服务器在国外某些地方可能连不上，如果连不上就换另一个）
-local luatosPushApi = "https://push.luatos.org/"
---备用的接口网址，从国内中转（有严格的QPS限制，请求频率过高会被屏蔽）
--- local luatosPushApi = "http://push.papapoi.com/"
-
---server酱的配置，用不到可留空，免费用户每天仅可发送五条推送消息
---server酱的SendKey，如果你用的是这个就需要填一个
---https://sct.ftqq.com/sendkey 申请一个
-local serverKey = ""
-
---pushover配置，用不到可留空
-local pushoverApiToken = ""
-local pushoverUserKey = ""
-
 
 --缓存消息
 local buff = {}
@@ -93,6 +69,8 @@ sys.taskInit(function()
         wlan.init()
         sys.wait(5*1000)
     end
+    log.info("wlan", "wait for MODULE_READY")
+    sys.waitUntil("MODULE_READY", 3000)
     print("gc1",collectgarbage("count"))
     if wlan.ready() then
         log.info("wlan", "ready !!")
@@ -102,59 +80,23 @@ sys.taskInit(function()
                 collectgarbage("collect")--防止内存不足
                 local sms = table.remove(buff,1)
                 local code,h, body
-                local data = sms[2]
-                if useServer == "serverChan" then--server酱
-                    log.info("notify","send to serverChan",data)
-                    code, h, body = http.request(
-                            "POST",
-                            "https://sctapi.ftqq.com/"..serverKey..".send",
-                            {["Content-Type"] = "application/x-www-form-urlencoded"},
-                            "title="..string.urlEncode("sms"..sms[1]).."&desp="..string.urlEncode(data)
-                        ).wait()
-                    log.info("notify","pushed sms notify",code,h,body,sms[1])
-                elseif useServer == "pushover" then --Pushover
-                    log.info("notify","send to Pushover",data)
-                    local body = {
-                        token = pushoverApiToken,
-                        user = pushoverUserKey,
-                        title = "SMS: "..sms[1],
-                        message = data
-                    }
-                    local json_body = string.gsub(json.encode(body), "\\b", "\\n") --luatos bug
-                    --多试几次好了
-                    for i=1,10 do
-                        code, h, body = http.request(
-                                "POST",
-                                "https://api.pushover.net/1/messages.json",
-                                {["Content-Type"] = "application/json; charset=utf-8"},
-                                json_body
-                            ).wait()
-                        log.info("notify","pushed sms notify",code,h,body,sms[1])
-                        if code == 200 then
-                            break
-                        end
-                        sys.wait(5000)
-                    end
-                else--luatos推送服务
-                    data = data:gsub("%%","%%25")
-                    :gsub("+","%%2B")
-                    :gsub("/","%%2F")
-                    :gsub("?","%%3F")
-                    :gsub("#","%%23")
-                    :gsub("&","%%26")
-                    :gsub(" ","%%20")
-                    local url = luatosPushApi..luatosPush..".send/sms"..sms[1].."/"..data
-                    log.info("notify","send to luatos push server",data,url)
-                    --多试几次好了
-                    for i=1,10 do
-                        code, h, body = http.request("GET",url).wait()
-                        log.info("notify","pushed sms notify",code,h,body,sms[1])
-                        if code == 200 then
-                            break
-                        end
-                        sys.wait(5000)
-                    end
-                end
+
+
+                local data = pdu.ucs2_utf8(sms[2])
+                local msg = {
+                    from = sms[1],
+                    text = data
+                }
+
+                log.info("notify","send to server",data)
+                code, h, body = http2.request(
+                        "POST",
+                        pushURL,
+                        {["Content-Type"] = "application/json"},
+                        json.encode(msg)
+                    ).wait()
+                log.info("notify","pushed sms notify",code,h,body,sms[1])
+
             end
             log.info("notify","wait for a new sms~")
             print("gc3",collectgarbage("count"))

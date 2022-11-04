@@ -140,6 +140,8 @@ sys.taskInit(function()
     led.status = 4
     log.info("air780","connected! wait sms")
 
+    sys.publish("MODULE_READY")
+
     while true do
         collectgarbage("collect")--防止内存不足
         local _, phone, data, time, long, total, id, sms_id = sys.waitUntil("AT_CMT")
