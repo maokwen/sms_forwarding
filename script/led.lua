@@ -4,12 +4,7 @@ local led = {}
 local ledStatus= gpio.setup(12, 0, gpio.PULLUP)
 --闪闪就行了
 sys.taskInit(function()
-    while true do
-        ledStatus(1)
-        sys.wait(100)
-        ledStatus(0)
-        sys.wait(1000)
-    end
+    ledStatus(1)
 end)
 
 --当前状态
