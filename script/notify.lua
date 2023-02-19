@@ -24,16 +24,15 @@ sys.taskInit(function()
     sys.waitUntil("IP_READY", 30000)
     log.info("wlan", "wait for MODULE_READY")
     sys.waitUntil("MODULE_READY", 3000)
-    print("qq",collectgarbage("count"))
+    print("gc1",collectgarbage("count"))
     if wlan.ready() then
         log.info("wlan", "ready !!")
         while true do
-            print("ww",collectgarbage("count"))
+            print("gc2",collectgarbage("count"))
             while #buff > 0 do--把消息读完
                 collectgarbage("collect")--防止内存不足
                 local sms = table.remove(buff,1)
                 local code,h, body
-
 
                 local data = pdu.ucs2_utf8(sms[2])
                 local msg = {
@@ -42,17 +41,16 @@ sys.taskInit(function()
                 }
 
                 log.info("notify","send to server",data)
-                code, h, body = http2.request(
+                code, h, body = http.request(
                         "POST",
                         pushURL,
                         {["Content-Type"] = "application/json"},
                         json.encode(msg)
                     ).wait()
                 log.info("notify","pushed sms notify",code,h,body,sms[1])
-
             end
             log.info("notify","wait for a new sms~")
-            print("zzz",collectgarbage("count"))
+            print("gc3",collectgarbage("count"))
             sys.waitUntil("SMS_ADD")
         end
     else
