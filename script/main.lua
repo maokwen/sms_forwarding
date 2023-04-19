@@ -28,7 +28,7 @@ do
     if not r then
         sys.timerLoopStart(function ()
             wdt.feed()
-            log.info("警告","固件类型或版本不满足要求，请使用esp32c3 v1002及以上版本固件。当前："..rtos.firmware())
+            log.info("警告","固件类型或版本不满足要求，请使用esp32c3 v1004及以上版本固件。当前："..rtos.firmware())
         end,500)
     end
 end
@@ -55,6 +55,10 @@ sys.taskInit(function()
     air780.write("AT+RESET")
     --同步AT命令看通不通（确保重启完）
     air780.loopAT("AT","AT_AT")
+    air780.loopAT("ATE1","AT_ATE1")
+
+    --关闭自动升级
+    air780.loopAT("AT+UPGRADE=\"AUTO\",0","AT_UPGRADE")
 
     led.status = 3
     log.info("air780","check sim card")
