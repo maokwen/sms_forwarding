@@ -8,6 +8,9 @@ table.insert(wifis, {name = "", password = ""})
 -- 推送URL
 local pushURL = ""
 
+--自定义push链接
+local pushURL = ""
+
 --短信接收指令的标记（密码）
 --[[
 目前支持命令（[cmdTag]表示你的tag）
