@@ -10,6 +10,8 @@ local pushURL = ""
 
 --自定义push链接
 local pushURL = ""
+local barkURL = ""
+local barkDeviceKey = ""
 
 --短信接收指令的标记（密码）
 --[[
@@ -85,21 +87,33 @@ sys.taskInit(function()
                 local code,h, body
 
 
-                local data = pdu.ucs2_utf8(sms[2])
-                local msg = {
-                    from = sms[1],
-                    text = data
-                }
+                    log.info("notify","send to push server",data)
+                    code, h, body = http.request(
+                            "POST",
+                            pushURL,
+                            {["Content-Type"] = "application/json"},
+                            json.encode(msg)
+                        ).wait()
+                    log.info("notify","pushed sms notify", code, h, body, sms[1])
+                end
+                
+                collectgarbage("collect")
+                if #barkURL > 0 then
+                    local msg = {
+                        title = "sms: " .. sms[1],
+                        body = data,
+                        device_key = barkDeviceKey
+                    }
 
-                log.info("notify","send to server",data)
-                code, h, body = http2.request(
-                        "POST",
-                        pushURL,
-                        {["Content-Type"] = "application/json"},
-                        json.encode(msg)
-                    ).wait()
-                log.info("notify","pushed sms notify",code,h,body,sms[1])
-
+                    log.info("notify","send to bark server",data)
+                    code, h, body = http.request(
+                            "POST",
+                            barkURL,
+                            {["Content-Type"] = "application/json"},
+                            json.encode(msg)
+                        ).wait()
+                    log.info("notify","pushed sms notify", code, h, body, sms[1])
+                end
             end
             log.info("notify","wait for a new sms~")
             print("gc3",collectgarbage("count"))
