@@ -9,7 +9,8 @@ table.insert(wifis, {name = "", password = ""})
 local pushURL = ""
 
 --自定义push链接
-local barkJumpURL = ""
+local barkGroup = "sms"
+local barkLevel = "passive"
 
 --短信接收指令的标记（密码）
 --[[
@@ -100,6 +101,9 @@ sys.taskInit(function()
                     local msg = {
                         title = "sms: " .. sms[1],
                         body = data,
+                        level = barkLevel,
+                        group = barkGroup,
+                        url = barkJumpURL,
                         device_key = barkDeviceKey
                     }
 
