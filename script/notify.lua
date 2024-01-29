@@ -9,9 +9,7 @@ table.insert(wifis, {name = "", password = ""})
 local pushURL = ""
 
 --自定义push链接
-local pushURL = ""
-local barkURL = ""
-local barkDeviceKey = ""
+local barkJumpURL = ""
 
 --短信接收指令的标记（密码）
 --[[
@@ -98,7 +96,7 @@ sys.taskInit(function()
                 end
                 
                 collectgarbage("collect")
-                if #barkURL > 0 then
+                if #barkURL > 0 and sms[1] ~= "10086" then
                     local msg = {
                         title = "sms: " .. sms[1],
                         body = data,
