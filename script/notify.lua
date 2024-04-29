@@ -5,12 +5,13 @@ local wifis = {}
 table.insert(wifis, {name = "", password = ""})
 -- 多个 wifi 继续使用 table.insert 添加，会逐个尝试
 
--- 推送URL
-local pushURL = ""
-
 --自定义push链接
-local barkGroup = "sms"
-local barkLevel = "passive"
+local pushURL = ""
+local barkURL = ""
+local barkDeviceKey = ""
+local barkJumpURL = ""
+local barkGroup = ""
+local barkLevel = ""
 
 --短信接收指令的标记（密码）
 --[[
@@ -84,7 +85,13 @@ sys.taskInit(function()
                 collectgarbage("collect")--防止内存不足
                 local sms = table.remove(buff,1)
                 local code,h, body
+                local data = sms[2]
 
+                if #pushURL > 0 then
+                    local msg = {
+                        from = sms[1],
+                        text = data
+                    }
 
                     log.info("notify","send to push server",data)
                     code, h, body = http.request(
