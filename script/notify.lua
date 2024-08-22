@@ -100,7 +100,7 @@ sys.taskInit(function()
                             {["Content-Type"] = "application/json"},
                             json.encode(msg)
                         ).wait()
-                    log.info("notify","pushed sms notify", code, h, body, sms[1])
+                    log.info("notify","pushed sms notify", code, h, sms[1])
                 end
                 
                 collectgarbage("collect")

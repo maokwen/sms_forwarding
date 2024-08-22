@@ -87,7 +87,7 @@ sys.subscribe(recvReady, function()
                     local l = table.remove(s,1)
                     if #l > 0 then
                         local phone,data,time,long,total,id,sms_id = pdu.decodePDU(l,len)
-                        log.info("sms","recv",phone,time,long,sms_id,total,id,data)
+                        log.info("sms","recv",phone,time,long,sms_id,total,id)
                         sys.publish("AT_CMT",phone,data,time,long,total,id,sms_id)
                         break
                     end
